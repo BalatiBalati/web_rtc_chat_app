@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Button } from '@mui/material'; // ✅ Fixed import to use MUI v5
+import { Button } from '@mui/material';
 import { SocketContext } from '../SocketContext';
 
 const Notifications = () => { 
@@ -7,7 +7,7 @@ const Notifications = () => {
 
     return (
         <>
-            {call?.isReceivedCall && !callAccepted && ( // ✅ Safe check for call and isReceivedCall
+            {call.isReceivingCall && !callAccepted && (
                 <div style={{ display: 'flex', justifyContent: 'center' }}>
                     <h1>{call.name} is calling:</h1>
                     <Button variant="contained" color="primary" onClick={answerCall}>
@@ -17,6 +17,6 @@ const Notifications = () => {
             )}
         </>
     );
-}
+};
 
 export default Notifications;
