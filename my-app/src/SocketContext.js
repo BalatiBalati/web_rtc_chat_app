@@ -5,7 +5,7 @@ import Peer from 'simple-peer';
 // Create Context
 const SocketContext = createContext();
 
-const socket = io('http://localhost:5000'); // Change to your backend server URL if needed
+const socket = io(process.env.REACT_APP_SOCKET_SERVER_URL || 'http://localhost:5000');
 
 export const SocketProvider = ({ children }) => {
     const [stream, setStream] = useState(null);
@@ -24,6 +24,9 @@ export const SocketProvider = ({ children }) => {
             .then((currentStream) => {
                 setStream(currentStream);
                 if (myVideo.current) myVideo.current.srcObject = currentStream;
+            })
+            .catch((error) => {
+                console.error('Error getting media:', error);
             });
 
         socket.on('me', (id) => setMe(id));
@@ -31,6 +34,11 @@ export const SocketProvider = ({ children }) => {
         socket.on('callUser', ({ from, name: callerName, signal }) => {
             setCall({ isReceivingCall: true, from, name: callerName, signal });
         });
+
+        return () => {
+            socket.off('me');
+            socket.off('callUser');
+        };
     }, []);
 
     const answerCall = () => {
@@ -46,11 +54,16 @@ export const SocketProvider = ({ children }) => {
             if (userVideo.current) userVideo.current.srcObject = currentStream;
         });
 
+        peer.on('error', (err) => {
+            console.error('Peer connection error:', err);
+        });
+
         peer.signal(call.signal);
         connectionRef.current = peer;
     };
 
     const callUser = (id) => {
+        alert(`Calling user ${id}...`);
         const peer = new Peer({ initiator: true, trickle: false, stream });
 
         peer.on('signal', (data) => {
@@ -59,6 +72,10 @@ export const SocketProvider = ({ children }) => {
 
         peer.on('stream', (currentStream) => {
             if (userVideo.current) userVideo.current.srcObject = currentStream;
+        });
+
+        peer.on('error', (err) => {
+            console.error('Peer connection error:', err);
         });
 
         socket.on('callAccepted', (signal) => {

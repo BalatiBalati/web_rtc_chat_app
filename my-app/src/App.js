@@ -16,20 +16,21 @@ const App = () => {
             }}
         >
             <AppBar 
-                position="static" 
+                position="sticky"  // Fixed position for sticky behavior
                 color="inherit"
                 sx={{
                     borderRadius: '15px',
-                    margin: '30px 100px',
+                    margin: '30px 10px',  // Reduced margins for better responsiveness
                     display: 'flex',
                     flexDirection: 'row',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    width: { xs: '90%', sm: '600px' }, // ✅ FIXED
+                    width: '100%',  // Full width for AppBar to span across the container
+                    maxWidth: '600px',  // Max width for larger screens
                     border: '2px solid black',
                 }}
             >
-                <Typography variant="h2" align="center" color="primary">
+                <Typography variant="h4" align="center" color="primary">
                     Video Chat
                 </Typography>
             </AppBar>

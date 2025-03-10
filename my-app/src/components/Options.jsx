@@ -1,20 +1,23 @@
 import React, { useState, useContext } from 'react';
-import { Button, TextField, Grid, Typography, Container, Paper } from '@mui/material';
+import { Button, TextField, Grid, Typography, Container, Paper, Snackbar } from '@mui/material';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { Assignment, Phone, PhoneDisabled } from '@mui/icons-material';
-import classNames from "classnames";
 import { SocketContext } from '../SocketContext'; // Import context
 
 const Options = ({ children }) => {
     const { me, callAccepted, name, setName, callEnded, leaveCall, callUser } = useContext(SocketContext);
     const [idToCopy, setIdToCopy] = useState('');
-    const [idToCall, setIdToCall] = useState(''); // State to store ID of the person to call
+    const [idToCall, setIdToCall] = useState('');
+    const [callError, setCallError] = useState('');
+    const [openSnackbar, setOpenSnackbar] = useState(false);
 
     const handleCall = () => {
-        
         if (idToCall) {
+            alert(`Calling ${idToCall}`);
             callUser(idToCall);  // Trigger callUser function with the ID
             alert("It worked");
+        } else {
+            alert("Please enter a valid ID to call");
         }
     };
 
@@ -68,7 +71,6 @@ const Options = ({ children }) => {
                                     startIcon={<PhoneDisabled />} 
                                     onClick={leaveCall}  // Trigger leaveCall function to hang up
                                     sx={{ margin: '10px 0' }}
-                                    // className={ClassNames.margin}
                                 >
                                     Hang Up
                                 </Button>
@@ -78,8 +80,7 @@ const Options = ({ children }) => {
                                     variant="contained" 
                                     color="primary" 
                                     startIcon={<Phone />} 
-                                    onClick={() => handleCall()}  // Trigger call on button click
-                                    // className={ClassNames.margin}
+                                    onClick={handleCall}  // Trigger call on button click
                                     sx={{ margin: '10px 0' }}
                                 >
                                     Call
@@ -91,6 +92,14 @@ const Options = ({ children }) => {
                     {children}
                 </form>
             </Paper>
+
+            {/* Snackbar for error messages */}
+            <Snackbar 
+                open={openSnackbar} 
+                autoHideDuration={6000} 
+                onClose={() => setOpenSnackbar(false)} 
+                message={callError} 
+            />
         </Container>
     );
 };
