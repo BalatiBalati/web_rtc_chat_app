@@ -5,7 +5,8 @@ import Peer from 'simple-peer';
 // Create Context
 const SocketContext = createContext();
 
-const socket = io(process.env.REACT_APP_SOCKET_SERVER_URL || 'http://localhost:5000');
+// Ensure you use the correct backend server URL
+const socket = io('http://localhost:5000');
 
 export const SocketProvider = ({ children }) => {
     const [stream, setStream] = useState(null);
@@ -14,48 +15,46 @@ export const SocketProvider = ({ children }) => {
     const [callAccepted, setCallAccepted] = useState(false);
     const [callEnded, setCallEnded] = useState(false);
     const [name, setName] = useState('');
-    
+
     const myVideo = useRef();
     const userVideo = useRef();
     const connectionRef = useRef();
 
+    // 🚀 Ensure video stream starts properly
     useEffect(() => {
         navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             .then((currentStream) => {
                 setStream(currentStream);
                 if (myVideo.current) myVideo.current.srcObject = currentStream;
+                console.log("🎥 Local video stream set");
             })
-            .catch((error) => {
-                console.error('Error getting media:', error);
-            });
+            .catch((error) => console.error("Error accessing media devices:", error));
 
-        socket.on('me', (id) => setMe(id));
-
-        socket.on('callUser', ({ from, name: callerName, signal }) => {
-            setCall({ isReceivingCall: true, from, name: callerName, signal });
+        socket.on('me', (id) => {
+            console.log(`🟢 Connected, My ID: ${id}`);
+            setMe(id);
         });
 
-        return () => {
-            socket.off('me');
-            socket.off('callUser');
-        };
+        socket.on('callUser', ({ from, name: callerName, signal }) => {
+            console.log(`📲 Incoming call from ${callerName} (${from})`);
+            setCall({ isReceivingCall: true, from, name: callerName, signal });
+        });
     }, []);
 
     const answerCall = () => {
+        console.log("📞 Answering call...");
         setCallAccepted(true);
 
         const peer = new Peer({ initiator: false, trickle: false, stream });
 
         peer.on('signal', (data) => {
+            console.log("📡 Sending answer signal...");
             socket.emit('answerCall', { signal: data, to: call.from });
         });
 
         peer.on('stream', (currentStream) => {
+            console.log("📽️ Receiving remote video stream...");
             if (userVideo.current) userVideo.current.srcObject = currentStream;
-        });
-
-        peer.on('error', (err) => {
-            console.error('Peer connection error:', err);
         });
 
         peer.signal(call.signal);
@@ -63,22 +62,22 @@ export const SocketProvider = ({ children }) => {
     };
 
     const callUser = (id) => {
-        alert(`Calling user ${id}...`);
+        console.log(`📞 Calling user ${id}...`);
+
         const peer = new Peer({ initiator: true, trickle: false, stream });
 
         peer.on('signal', (data) => {
+            console.log("📡 Emitting callUser event to server...");
             socket.emit('callUser', { userToCall: id, signalData: data, from: me, name });
         });
 
         peer.on('stream', (currentStream) => {
+            console.log("📽️ Setting remote user stream...");
             if (userVideo.current) userVideo.current.srcObject = currentStream;
         });
 
-        peer.on('error', (err) => {
-            console.error('Peer connection error:', err);
-        });
-
         socket.on('callAccepted', (signal) => {
+            console.log("✅ Call accepted, signaling peer...");
             setCallAccepted(true);
             peer.signal(signal);
         });
@@ -88,8 +87,8 @@ export const SocketProvider = ({ children }) => {
 
     const leaveCall = () => {
         setCallEnded(true);
+        console.log("❌ Leaving call...");
         connectionRef.current?.destroy();
-
         window.location.reload();
     };
 

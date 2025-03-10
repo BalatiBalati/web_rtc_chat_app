@@ -1,75 +1,46 @@
-import React, { useContext } from 'react';
-import { Box, Paper, CircularProgress, Typography } from '@mui/material';
+import React, { useContext, useEffect } from 'react';
 import { SocketContext } from '../SocketContext';
 
 const VideoPlayer = () => {
-    const { myVideo, userVideo, callAccepted, callEnded, stream } = useContext(SocketContext);
+    const { name, callAccepted, myVideo, userVideo, callEnded, stream, call } = useContext(SocketContext);
+
+    useEffect(() => {
+        console.log("🎥 My Stream:", stream);
+        console.log("👀 User Video Reference:", userVideo.current);
+        if (callAccepted && userVideo.current) {
+            userVideo.current.load();
+        }
+    }, [stream, callAccepted]);
 
     return (
-        <Box 
-            sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                flexDirection: { xs: 'column', sm: 'row' }, // ✅ Responsive Layout
-                gap: 2,
-                alignItems: 'center',
-            }}
-        >
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px' }}>
             {/* My Video */}
-            {stream ? (
-                <Paper 
-                    elevation={3} 
-                    sx={{ 
-                        padding: '10px', 
-                        border: '2px solid black', 
-                        margin: '10px',
-                        display: 'flex',
-                        justifyContent: 'center',
-                    }}
-                >
-                    <video 
-                        playsInline 
-                        muted 
-                        ref={myVideo} 
-                        autoPlay 
-                        style={{ width: '100%', maxWidth: '550px', borderRadius: '10px' }} 
+            {stream && (
+                <div>
+                    <p><strong>{name || "Me"}</strong></p>
+                    <video
+                        playsInline
+                        muted
+                        ref={myVideo}
+                        autoPlay
+                        style={{ width: "300px", borderRadius: "10px", border: "2px solid black" }}
                     />
-                </Paper>
-            ) : (
-                <Box display="flex" justifyContent="center" alignItems="center" flexDirection="column">
-                    <CircularProgress />
-                    <Typography variant="h6" sx={{ mt: 2 }}>Waiting for your video stream...</Typography>
-                </Box>
+                </div>
             )}
-
-            {/* User Video */}
+            
+            {/* User's Video */}
             {callAccepted && !callEnded && (
-                <Paper 
-                    elevation={3} 
-                    sx={{ 
-                        padding: '10px', 
-                        border: '2px solid black', 
-                        margin: '10px',
-                        display: 'flex',
-                        justifyContent: 'center',
-                    }}
-                >
-                    <video 
-                        playsInline 
-                        ref={userVideo} 
-                        autoPlay 
-                        style={{ width: '100%', maxWidth: '550px', borderRadius: '10px' }} 
+                <div>
+                    <p><strong>{call.name || "Caller"}</strong></p>
+                    <video
+                        playsInline
+                        ref={userVideo}
+                        autoPlay
+                        style={{ width: "300px", borderRadius: "10px", border: "2px solid black" }}
                     />
-                </Paper>
+                </div>
             )}
-
-            {/* Fallback if userVideo is not available */}
-            {!callAccepted && !callEnded && (
-                <Box display="flex" justifyContent="center" alignItems="center" flexDirection="column">
-                    <Typography variant="h6">Waiting for user to join...</Typography>
-                </Box>
-            )}
-        </Box>
+        </div>
     );
 };
 
